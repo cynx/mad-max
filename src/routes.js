@@ -14,13 +14,24 @@ const handleAuthentication = (nextState, replace) => {
     }
 };
 
-const  PrivateRoute = ({component: Component, authed, ...rest}) => {
+const  PrivateRoute = ({component: Component, authed, auth, ...rest}) => {
     return (
         <Route
             {...rest}
             render={(props) => authed() === true
-                ? <Component {...props} />
+                ? <Component auth={auth} {...props} />
                 : <Redirect to={{pathname: '/', state: {from: props.location}}} />}
+        />
+    )
+};
+
+const  LoginRoute = ({component: Component, authed, auth, ...rest}) => {
+    return (
+        <Route
+            {...rest}
+            render={(props) => authed() === false
+                ? <Component auth={auth} {...props} />
+                : <Redirect to={{pathname: '/home', state: {from: props.location}}} />}
         />
     )
 };
@@ -34,11 +45,19 @@ export const makeMainRoutes = () => {
         <BrowserRouter history={history} >
             <div>
                 <Switch>
-                    <Route exact path="/" render={(props) => <App auth={auth} {...props} />} />
+                    <LoginRoute
+                        authed={auth.isAuthenticated}
+                        path="/"
+                        component={App}
+                        auth={auth}
+                        exact
+
+                    />
                     <PrivateRoute
                         authed={auth.isAuthenticated}
                         path="/home"
                         component={Home}
+                        auth={auth}
 
                     />
                     <Route path="/callback" render={(props) => {
